@@ -19,3 +19,9 @@ codegen = { path = "codegen" }
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 tokio-test = "*"
+
+[workspace]
+
+members = [
+    "codegen",
+]
