@@ -1,6 +1,6 @@
 [package]
 name = "genserver"
-version = "0.1.9"
+version = "0.1.10"
 edition = "2021"
 authors = ["Brenden Matthews <brenden@brndn.io>"]
 categories = ["asynchronous", "concurrency"]
@@ -14,7 +14,7 @@ rust = "1.51"
 
 [dependencies]
 tokio = { version = "1", features = ["sync", "rt", "macros"] }
-genserver_codegen = { version = "0.1.9", path = "codegen" }
+genserver_codegen = { version = "0.1.10", path = "codegen" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
