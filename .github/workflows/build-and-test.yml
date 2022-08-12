@@ -34,14 +34,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --features ${{ env.FEATURES }}
       - name: Test
         uses: actions-rs/cargo@v1
         env:
           RUST_BACKTRACE: 1
         with:
           command: test
-          args: --features ${{ env.FEATURES }}
       - name: Rustfmt
         if: ${{ matrix.rust == 'nightly' }}
         uses: actions-rs/cargo@v1
@@ -52,4 +50,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --features ${{ env.FEATURES }} -- -D warnings
+          args: -- -D warnings
