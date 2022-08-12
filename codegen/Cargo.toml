@@ -1,9 +1,12 @@
 [package]
 name = "genserver_codegen"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "code generation for genserver crate"
 license = "MIT"
+authors = ["Brenden Matthews <brenden@brndn.io>"]
+documentation = "https://docs.rs/genserver"
+repository = "https://github.com/brndnmtthws/genserver"
 
 [lib]
 proc-macro = true
