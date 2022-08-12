@@ -36,3 +36,8 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
+          working-directory: codegen
+      - name: Publish to crates.io
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
