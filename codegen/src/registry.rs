@@ -152,10 +152,10 @@ pub fn make_registry(
                         let mut handler = <#ty as genserver::GenServer>::new(local_registry);
                         while let Some((message, oneshot)) = #rx.recv().await {
                             if let Some(oneshot) = oneshot {
-                                let Response = handler.handle_call( message).await;
+                                let Response = handler.handle_call(message).await;
                                 oneshot.send(Response).ok();
                             } else {
-                                handler.handle_cast( message).await;
+                                handler.handle_cast(message).await;
                             }
                         }
                     });
