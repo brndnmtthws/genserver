@@ -18,7 +18,7 @@ genserver_codegen = { version = "0.1.7", path = "codegen" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-tokio-test = "*"
+tokio-test = "0.4"
 
 [workspace]
 
