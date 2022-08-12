@@ -32,13 +32,11 @@ jobs:
         with:
           command: login
           args: -- ${{ secrets.CRATES_IO_TOKEN }}
-      - run: pushd codegen
+      - name: Install cargo-publish-workspace
+        uses: actions-rs/cargo@v1
+        with:
+          command: install cargo-publish-workspace
       - name: Publish to crates.io
         uses: actions-rs/cargo@v1
         with:
-          command: publish
-      - run: popd
-      - name: Publish to crates.io
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
+          command: publish-workspace
