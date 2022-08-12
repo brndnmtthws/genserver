@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream, Parser, Result};
 use syn::{
     parse_macro_input, parse_quote, Field, Fields, FieldsNamed, Ident, ItemStruct, Token, Type,
@@ -60,6 +60,27 @@ pub fn make_registry(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let mut input = parse_macro_input!(input as RegistryStruct);
+    let (existing_fields, existing_fields_assignment) =
+        if let Fields::Named(ref mut fields) = input.item.fields {
+            let pairs: Vec<_> = fields
+                .named
+                .iter()
+                .map(|field| {
+                    let (ident, ty) = (field.ident.clone(), field.ty.clone());
+                    quote! {
+                        #ident: #ty
+                    }
+                })
+                .collect();
+            let names: Vec<_> = fields
+                .named
+                .iter()
+                .map(|field| field.ident.to_token_stream())
+                .collect();
+            (pairs, names)
+        } else {
+            (vec![], vec![])
+        };
 
     let args = parse_macro_input!(args as RegistryArgs);
 
@@ -95,7 +116,7 @@ pub fn make_registry(
         .iter()
         .map(|(_name, _ty, tx, _rx)| {
             quote! {
-                #tx,
+                #tx
             }
         })
         .collect();
@@ -154,10 +175,13 @@ pub fn make_registry(
 
     let impl_block = quote! {
         impl #impl_generics #ident #ty_generics #where_clause {
-            pub async fn start() -> Self {
+            pub async fn start(
+                #(#existing_fields),*
+            ) -> Self {
                 #(#make_channels)*
                 let mut registry = Self {
-                    #(#assign_tx_channels)*
+                    #(#existing_fields_assignment,)*
+                    #(#assign_tx_channels,)*
                 };
                 #(#start_servers)*
                 registry

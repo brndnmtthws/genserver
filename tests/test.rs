@@ -1,6 +1,8 @@
 #![feature(type_alias_impl_trait, generic_associated_types)]
 
 use std::future::Future;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 use genserver::{make_registry, GenServer};
@@ -24,10 +26,12 @@ async fn test() {
         }
 
         fn handle_call(&mut self, message: Self::Message) -> Self::CallResponse<'_> {
-            std::future::ready(format!("in handle_call, receved {}", message))
+            self.registry.counter.fetch_add(1, Ordering::SeqCst);
+            std::future::ready(format!("in handle_call, received {}", message))
         }
 
         fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_> {
+            self.registry.counter.fetch_add(1, Ordering::SeqCst);
             async move {
                 println!("in handle_cast, receved {}", message);
                 let resp = self
@@ -41,16 +45,22 @@ async fn test() {
     }
 
     #[make_registry{
-        myserver1: MyServer
-        myserver2: MyServer
+        myserver1: MyServer,
+        myserver2: MyServer,
     }]
-    struct MyRegistry;
+    struct MyRegistry {
+        counter: Arc<AtomicUsize>,
+    }
 
-    let registry = MyRegistry::start().await;
+    let counter = Arc::new(AtomicUsize::new(0));
+    let registry = MyRegistry::start(counter.clone()).await;
 
     let response = registry.call_myserver1("hi".into()).await.unwrap();
+    assert_eq!("in handle_call, received hi", &response);
     registry.cast_myserver1("woohoo!".into()).await.unwrap();
     println!("got response: {}", response);
 
     tokio::time::sleep(Duration::from_secs(1)).await;
+
+    assert_eq!(counter.load(Ordering::Relaxed), 3);
 }
