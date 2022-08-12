@@ -354,7 +354,7 @@ use std::future::Future;
 ///     // ...
 /// }
 /// ```
-pub use codegen::make_registry;
+pub use genserver_codegen::make_registry;
 
 /// Error wrapper type.
 #[derive(Debug)]
