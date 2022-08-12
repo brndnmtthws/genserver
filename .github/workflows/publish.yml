@@ -32,7 +32,8 @@ jobs:
         with:
           command: login
           args: -- ${{ secrets.CRATES_IO_TOKEN }}
-      - run: pushd codegen && cargo publish && sleep 20 && popd
+      - run: cargo publish && sleep 20
+        working-directory: codegen
       - name: Publish to crates.io
         uses: actions-rs/cargo@v1
         with:
