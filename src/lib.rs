@@ -358,19 +358,25 @@ pub use genserver_codegen::make_registry;
 
 /// Error wrapper type.
 #[derive(Debug)]
-pub enum Error<T> {
+pub enum Error<M, R> {
     OneshotRecvError(tokio::sync::oneshot::error::RecvError),
-    MpscSendError(tokio::sync::mpsc::error::SendError<T>),
+    MpscSendError(
+        tokio::sync::mpsc::error::SendError<(M, Option<tokio::sync::oneshot::Sender<R>>)>,
+    ),
 }
 
-impl<T> From<tokio::sync::oneshot::error::RecvError> for Error<T> {
+impl<M, R> From<tokio::sync::oneshot::error::RecvError> for Error<M, R> {
     fn from(err: tokio::sync::oneshot::error::RecvError) -> Self {
         Self::OneshotRecvError(err)
     }
 }
 
-impl<T> From<tokio::sync::mpsc::error::SendError<T>> for Error<T> {
-    fn from(err: tokio::sync::mpsc::error::SendError<T>) -> Self {
+impl<M, R> From<tokio::sync::mpsc::error::SendError<(M, Option<tokio::sync::oneshot::Sender<R>>)>>
+    for Error<M, R>
+{
+    fn from(
+        err: tokio::sync::mpsc::error::SendError<(M, Option<tokio::sync::oneshot::Sender<R>>)>,
+    ) -> Self {
         Self::MpscSendError(err)
     }
 }

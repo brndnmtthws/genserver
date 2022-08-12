@@ -127,13 +127,13 @@ pub fn make_registry(
             let call_fn = Ident::new(&format!("call_{}", name), Span::call_site());
             let cast_fn = Ident::new(&format!("cast_{}", name), Span::call_site());
             quote! {
-                pub async fn #call_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<<#ty as genserver::GenServer>::Response, genserver::Error<(<#ty as genserver::GenServer>::Message, Option<tokio::sync::oneshot::Sender<<#ty as genserver::GenServer>::Message>>)>> {
+                pub async fn #call_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<<#ty as genserver::GenServer>::Response, genserver::Error<<#ty as genserver::GenServer>::Message, <#ty as genserver::GenServer>::Response>> {
                     let (oneshot_tx, oneshot_rx) = tokio::sync::oneshot::channel::<<#ty as genserver::GenServer>::Response>();
                     self.#tx.send((message, Some(oneshot_tx))).await?;
                     let Response = oneshot_rx.await?;
                     Ok(Response)
                 }
-                pub async fn #cast_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<(), genserver::Error<(<#ty as genserver::GenServer>::Message, Option<tokio::sync::oneshot::Sender<<#ty as genserver::GenServer>::Message>>)>> {
+                pub async fn #cast_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<(), genserver::Error<<#ty as genserver::GenServer>::Message, <#ty as genserver::GenServer>::Response>> {
                     self.#tx.send((message, None)).await?;
                     Ok(())
                 }
