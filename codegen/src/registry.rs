@@ -148,7 +148,7 @@ pub fn make_registry(
                 {
                     let local_registry = registry.clone();
                     tokio::spawn(async move {
-                        let mut handler = #ty::new(local_registry);
+                        let mut handler = <#ty as genserver::GenServer>::new(local_registry);
                         while let Some((message, oneshot)) = #rx.recv().await {
                             if let Some(oneshot) = oneshot {
                                 let Response = handler.handle_call(message).await;
