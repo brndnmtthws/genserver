@@ -35,7 +35,8 @@ jobs:
       - name: Install cargo-publish-workspace
         uses: actions-rs/cargo@v1
         with:
-          command: install cargo-publish-workspace
+          command: install
+          args: cargo-publish-workspace
       - name: Publish to crates.io
         uses: actions-rs/cargo@v1
         with:
