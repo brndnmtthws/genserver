@@ -1,0 +1,21 @@
+[package]
+name = "genserver"
+version = "0.1.0"
+edition = "2021"
+authors = ["Brenden Matthews <brenden@brndn.io>"]
+categories = ["asynchronous", "concurrency"]
+description = "genserver is an Elixir inspired async actor library"
+documentation = "https://docs.rs/genserver"
+keywords = ["async", "actors","concurrency","elixir", "erlang"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/brndnmtthws/genserver"
+rust = "1.51"
+
+[dependencies]
+tokio = { version = "1", features = ["sync", "rt", "macros"] }
+codegen = { path = "codegen" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-test = "*"
