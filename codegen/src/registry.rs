@@ -125,13 +125,26 @@ pub fn make_registry(
         .iter()
         .map(|(name, ty, tx, _rx)| {
             let call_fn = Ident::new(&format!("call_{}", name), Span::call_site());
+            let call_timeout_fn = Ident::new(&format!("call_{}_with_timeout", name), Span::call_site());
             let cast_fn = Ident::new(&format!("cast_{}", name), Span::call_site());
             quote! {
                 pub async fn #call_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<<#ty as genserver::GenServer>::Response, genserver::Error<<#ty as genserver::GenServer>::Message, <#ty as genserver::GenServer>::Response>> {
                     let (oneshot_tx, oneshot_rx) = tokio::sync::oneshot::channel::<<#ty as genserver::GenServer>::Response>();
                     self.#tx.send((message, Some(oneshot_tx))).await?;
-                    let Response = oneshot_rx.await?;
-                    Ok(Response)
+                    let response = oneshot_rx.await?;
+                    Ok(response)
+                }
+                pub async fn #call_timeout_fn(&self, message: <#ty as genserver::GenServer>::Message, timeout: std::time::Duration) -> Result<<#ty as genserver::GenServer>::Response, genserver::Error<<#ty as genserver::GenServer>::Message, <#ty as genserver::GenServer>::Response>> {
+                    let (oneshot_tx, oneshot_rx) = tokio::sync::oneshot::channel::<<#ty as genserver::GenServer>::Response>();
+                    self.#tx.send((message, Some(oneshot_tx))).await?;
+
+                    let sleep = tokio::time::sleep(timeout);
+                    tokio::pin!(sleep);
+
+                    tokio::select! {
+                        _ = sleep => Err(genserver::Error::Timeout),
+                        response = oneshot_rx => response.map_err(|e|genserver::Error::from(e)),
+                    }
                 }
                 pub async fn #cast_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<(), genserver::Error<<#ty as genserver::GenServer>::Message, <#ty as genserver::GenServer>::Response>> {
                     self.#tx.send((message, None)).await?;

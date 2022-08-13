@@ -1,139 +1,153 @@
-/*!
-# genserver: generate a server
-
-This is a neat little create for building async actor-based applications,
-inspired by Elixir's GenServer, powered by Tokio.
-
-This crate is currently nightly-only, and requires unstable features
-(`#![feature(type_alias_impl_trait, generic_associated_types)]`).
-
-## Introduction
-
-Erlang's OTP has reached legend amongst computer people for its rock solid
-reliability, super cool concurrency, failure handling, hot code reloading,
-and web scale innovation. [This excellent documentary
-film](https://www.youtube.com/watch?v=rRbY3TMUcgQ) provides a good overview of
-some of the coolness of Erlang.
-
-This crate has nothing to do Erlang, but it takes inspiration from Elixir
-(Erlang's younger, ever more hip successor) and its GenServer. Here we
-provide a method and interface for creating very simple actors which can
-call other actors and reply to messages.
-
-Due to some quirks of the current Rust async implementation, this crate has
-to do a few janky things to make everything work nice, however the end
-result is a nice little API for building legendary actor-based systems. For
-example, Rust doesn't yet support async methods in traits, but we can
-provide similar behaviour by enabling a few unstable features.
-
-Underneath the hood, Tokio is leveraged for its sweet concurrency
-primitives. You can generate as many servers as you'd like, and each is
-spawned into its own context.
-
-We can build some really cool stuff using this very simple abstraction. And
-since it all runs within an async context, we can build super fast web scale
-technology in no time. Plus we get all the benefits of Rust, especially the
-bragging rights.
-
-For more usage examples (aside from what's in the docs), check out the tests in
-[`tests/test.rs`](https://github.com/brndnmtthws/genserver/blob/main/tests/test.rs)
-within this crate.
-
-## Quickstart
-
-To get started, you'll need to do 3 things:
-
-* Define one or more servers, which respond to _calls_ and _casts_, and
-  implement the [`GenServer`] trait.
-* Define a registry with [`make_registry`], which starts and managers the
-  servers you define
-* Enable the `generic_associated_types` and `type_alias_impl_trait` features
-  at the crate level.
-
-When we make a _call_, the call will block until it returns a result from
-the server. When we make a _cast_, the cast returns immediately after it's
-dispatched to the server.
-
-We need to start our registry within an async context. Refer
-
-Here is a minimal code example showing a server, `MyServer`, which
-implements [`GenServer`]. We then create a registry and start it.
-
-```
-// these two features must be enabled at the crate level
-#![feature(generic_associated_types, type_alias_impl_trait)]
-
-use std::future::Future;
-
-use genserver::{make_registry, GenServer};
-
-struct MyServer {
-    // Any state your server needs can go right
-    // in here. We keep a registry around in case
-    // we want to call any other servers from our
-    // server.
-    registry: MyRegistry,
-}
-
-impl GenServer for MyServer {
-    // Message type for this server.
-    type Message = String;
-    // The type of the registry defined by the `make_registry` attribute macro.
-    type Registry = MyRegistry;
-    // The response type for calls.
-    type Response = String;
-
-    // The call response type, a future, which returns Self::Response.
-    type CallResponse<'a> = impl Future<Output = Self::Response> + 'a;
-    // The cast response type, also a future, which returns unit.
-    type CastResponse<'a> = impl Future<Output = ()> + 'a;
-
-    fn new(registry: Self::Registry) -> Self {
-        // When are server is started, the registry passes a copy
-        // of itself here. We keep it around so we can call
-        // other servers from this one.
-        Self { registry }
-    }
-
-    // Calls to handle_call will block until our `Response` is returned.
-    // Because they return a future, we can return an async block here.
-    fn handle_call(&mut self, message: Self::Message) -> Self::CallResponse<'_> {
-        println!("handle_call received {}", message);
-        std::future::ready("returned from handle_call".into())
-    }
-
-    // Casts always return (), because they do not block callers and return
-    // immediately.
-    fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_> {
-        println!("handle_cast received {}", message);
-        std::future::ready(())
-    }
-}
-
-#[make_registry{
-    myserver: MyServer
-}]
-struct MyRegistry;
-
-tokio_test::block_on(async {
-    let registry = MyRegistry::start().await;
-
-    let response = registry
-        .call_myserver("calling myserver".into())
-        .await
-        .unwrap();
-    registry
-        .cast_myserver("casting to myserver".into())
-        .await
-        .unwrap();
-});
-```
-
-Note that in the code above, `MyServer::handle_call` and
-`MyServer::handle_cast` return futures. That means you can include an async
-block within the function and return it. Refer to [`GenServer`] for more
-details.
-*/
+//! # genserver: generate a server
+//!
+//! This is a neat little create for building async actor-based applications,
+//! inspired by Elixir's GenServer, powered by Tokio.
+//!
+//! This crate is currently nightly-only, and requires unstable features
+//! (`#![feature(type_alias_impl_trait, generic_associated_types)]`).
+//!
+//! ## Introduction
+//!
+//! Erlang's OTP has reached legend amongst computer people for its rock solid
+//! reliability, super cool concurrency, failure handling, hot code reloading,
+//! and web scale innovation. [This excellent documentary
+//! film](https://www.youtube.com/watch?v=rRbY3TMUcgQ) provides a good overview of
+//! some of the coolness of Erlang.
+//!
+//! This crate has nothing to do Erlang, but it takes inspiration from Elixir
+//! (Erlang's younger, ever more hip successor) and its GenServer. Here we
+//! provide a method and interface for creating very simple actors which can
+//! call other actors and reply to messages.
+//!
+//! Due to some quirks of the current Rust async implementation, this crate has
+//! to do a few janky things to make everything work nice, however the end
+//! result is a nice little API for building legendary actor-based systems. For
+//! example, Rust doesn't yet support async methods in traits, but we can
+//! provide similar behaviour by enabling a few unstable features.
+//!
+//! Underneath the hood, Tokio is leveraged for its sweet concurrency
+//! primitives. You can generate as many servers as you'd like, and each is
+//! spawned into its own context.
+//!
+//! We can build some really cool stuff using this very simple abstraction. And
+//! since it all runs within an async context, we can build super fast web scale
+//! technology in no time. Plus we get all the benefits of Rust, especially the
+//! bragging rights.
+//!
+//! For more usage examples (aside from what's in the docs), check out the tests
+//! in [`tests/test.rs`](https://github.com/brndnmtthws/genserver/blob/main/tests/test.rs)
+//! within this crate.
+//!
+//! ## Quickstart
+//!
+//! To get started, you'll need to do 3 things:
+//!
+//! * Define one or more servers, which respond to _calls_ and _casts_, and
+//!   implement the [`GenServer`] trait.
+//! * Define a registry with [`make_registry`], which starts and managers the
+//!   servers you define
+//! * Enable the `generic_associated_types` and `type_alias_impl_trait` features
+//!   at the crate level.
+//!
+//! When we make a _call_, the call will block until it returns a result from
+//! the server. When we make a _cast_, the cast returns immediately after it's
+//! dispatched to the server.
+//!
+//! We need to start our registry within an async context. Refer
+//!
+//! Here is a minimal code example showing a server, `MyServer`, which
+//! implements [`GenServer`]. We then create a registry and start it.
+//!
+//! ```
+//! // these two features must be enabled at the crate level
+//! #![feature(generic_associated_types, type_alias_impl_trait)]
+//!
+//! use std::future::Future;
+//!
+//! use genserver::{make_registry, GenServer};
+//!
+//! struct MyServer {
+//!     // Any state your server needs can go right
+//!     // in here. We keep a registry around in case
+//!     // we want to call any other servers from our
+//!     // server.
+//!     registry: MyRegistry,
+//! }
+//!
+//! impl GenServer for MyServer {
+//!     // Message type for this server.
+//!     type Message = String;
+//!     // The type of the registry defined by the `make_registry` attribute macro.
+//!     type Registry = MyRegistry;
+//!     // The response type for calls.
+//!     type Response = String;
+//!
+//!     // The call response type, a future, which returns Self::Response.
+//!     type CallResponse<'a> = impl Future<Output = Self::Response> + 'a;
+//!     // The cast response type, also a future, which returns unit.
+//!     type CastResponse<'a> = impl Future<Output = ()> + 'a;
+//!
+//!     fn new(registry: Self::Registry) -> Self {
+//!         // When are server is started, the registry passes a copy
+//!         // of itself here. We keep it around so we can call
+//!         // other servers from this one.
+//!         Self { registry }
+//!     }
+//!
+//!     // Calls to handle_call will block until our `Response` is returned.
+//!     // Because they return a future, we can return an async block here.
+//!     fn handle_call(&mut self, message: Self::Message) -> Self::CallResponse<'_> {
+//!         println!("handle_call received {}", message);
+//!         std::future::ready("returned from handle_call".into())
+//!     }
+//!
+//!     // Casts always return (), because they do not block callers and return
+//!     // immediately.
+//!     fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_> {
+//!         println!("handle_cast received {}", message);
+//!         std::future::ready(())
+//!     }
+//! }
+//!
+//! #[make_registry{
+//!     myserver: MyServer
+//! }]
+//! struct MyRegistry;
+//!
+//! tokio_test::block_on(async {
+//!     let registry = MyRegistry::start().await;
+//!
+//!     let response = registry
+//!         .call_myserver("calling myserver".into())
+//!         .await
+//!         .unwrap();
+//!     registry
+//!         .cast_myserver("casting to myserver".into())
+//!         .await
+//!         .unwrap();
+//! });
+//! ```
+//!
+//! Note that in the code above, `MyServer::handle_call` and
+//! `MyServer::handle_cast` return futures. That means you can include an async
+//! block within the function and return it. Refer to [`GenServer`] for more
+//! details.
+//!
+//! ## Supplying initialization data to your server
+//!
+//! With Elixir's GenServer, you can initialize state with the `init()` method.
+//! However, in Rust this is a bit tricky due to the type rules, and it makes
+//! the implementation much more complicated.
+//!
+//! The [`GenServer`] trait lets you control the initialization of your server
+//! with the `new()` method. However, there's no way to pass additional
+//! parameters to `new()`. Instead, you have 2 options:
+//!
+//! 1. You can simply create a message with initial parameters, and send that
+//! message to your server immediately after launching. This is the best option,
+//! though it has some drawbacks such as needing to make most fields optional.
+//! 2. You could add fields to your [`Registry`]. This is the least preferred
+//! option, as the registry should be immutable and easy to make many copies of.
 
 #![feature(generic_associated_types)]
 
@@ -163,14 +177,20 @@ use std::future::Future;
 /// named `first_server` and `second_server`, and are of the type `FirstServer`
 /// and `SecondServer` respectively.
 ///
-/// For each server registered with this registry, the `call_{name}()` and
-/// `cast_{name}()` will be generated for this registry which can be used to
-/// make calls and casts to each server. You can (if you wish) define multiple
-/// separate instances of the same type, so long as each one has a unique name,
-/// much like you would when defining struct fields.
+/// For each server registered with this registry, the `call_{name}()`,
+/// `call_{name}_with_timeout()`, and `cast_{name}()` will be generated for this
+/// registry which can be used to make calls and casts to each server. You can
+/// (if you wish) define multiple separate instances of the same type, so long
+/// as each one has a unique name, much like you would when defining struct
+/// fields.
 ///
-/// In the example above, the attribute would generate `call_first_server()`,
-/// `cast_first_server()`, `call_second_server()`, and `cast_second_server()`.
+/// Using the example above, we'd generate functions with the following names in
+/// our registry:
+///
+/// | Call fn | Call fn with timeout | Cast fn (non-blocking) |
+/// |---|---|---|
+/// |`call_first_server`|`call_first_server_with_timeout`|`cast_first_server`|
+/// |`call_second_server`|`call_second_server_with_timeout`|`cast_second_server`|
 ///
 /// This macro will additionally derive the [`Clone`] trait.
 ///
@@ -363,6 +383,7 @@ pub enum Error<M, R> {
     MpscSendError(
         tokio::sync::mpsc::error::SendError<(M, Option<tokio::sync::oneshot::Sender<R>>)>,
     ),
+    Timeout,
 }
 
 impl<M, R> From<tokio::sync::oneshot::error::RecvError> for Error<M, R> {
