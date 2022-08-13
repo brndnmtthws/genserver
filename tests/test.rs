@@ -189,3 +189,87 @@ async fn test_timeout() {
 
     assert_eq!(counter.load(Ordering::Relaxed), 4);
 }
+
+#[tokio::test]
+async fn test_state_injection() {
+    struct MyServer {
+        registry: MyRegistry,
+        initial_values: Vec<String>,
+    }
+
+    #[derive(Debug)]
+    enum MyServerMessage {
+        InitState(Vec<String>),
+        GetState,
+    }
+
+    #[derive(Debug, PartialEq)]
+    enum MyServerResponse {
+        Ok,
+        State(Vec<String>),
+    }
+
+    impl GenServer for MyServer {
+        type Message = MyServerMessage;
+        type Registry = MyRegistry;
+        type Response = MyServerResponse;
+
+        type CallResponse<'a> = impl Future<Output = Self::Response> + 'a;
+        type CastResponse<'a> = impl Future<Output = ()> + 'a;
+
+        fn new(registry: Self::Registry) -> Self {
+            Self {
+                registry,
+                initial_values: vec![],
+            }
+        }
+
+        fn handle_call(&mut self, message: Self::Message) -> Self::CallResponse<'_> {
+            println!("got {:?}", message);
+            self.registry.counter.fetch_add(1, Ordering::SeqCst);
+            async {
+                match message {
+                    MyServerMessage::InitState(initial_values) => {
+                        self.initial_values = initial_values;
+                        MyServerResponse::Ok
+                    }
+                    MyServerMessage::GetState => {
+                        MyServerResponse::State(self.initial_values.clone())
+                    }
+                }
+            }
+        }
+
+        fn handle_cast(&mut self, _message: Self::Message) -> Self::CastResponse<'_> {
+            std::future::ready(())
+        }
+    }
+
+    #[make_registry{
+        myserver1: MyServer,
+        myserver2: MyServer,
+    }]
+    struct MyRegistry {
+        counter: Arc<AtomicUsize>,
+    }
+
+    let counter = Arc::new(AtomicUsize::new(0));
+    let registry = MyRegistry::start(counter.clone()).await;
+
+    let response = registry
+        .call_myserver1(MyServerMessage::InitState(vec!["one".into(), "two".into()]))
+        .await;
+    assert!(response.is_ok());
+    assert_eq!(response.unwrap(), MyServerResponse::Ok);
+
+    let response = registry.call_myserver1(MyServerMessage::GetState).await;
+    assert!(response.is_ok());
+    assert_eq!(
+        response.unwrap(),
+        MyServerResponse::State(vec!["one".into(), "two".into()])
+    );
+
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
+    assert_eq!(counter.load(Ordering::Relaxed), 2);
+}

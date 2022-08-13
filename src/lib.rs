@@ -149,6 +149,29 @@
 //! 2. You could add fields to your [`Registry`]. This is the least preferred
 //! option, as the registry should be immutable and easy to make many copies of.
 //!
+//! ## Handling state within servers
+//!
+//! Each server instance you create is essentially an ordinary struct, but it's
+//! owned and created by the registry. Moving state into your struct can be
+//! accomplished by sending it messages with state (Pro Tip: use enums for
+//! messages). Your server struct can contain any arbitrary state you want.
+//!
+//! For example, you can create a server like this:
+//!
+//! ```
+//! use std::collections::HashMap;
+//!
+//! pub struct MyStatefulServer {
+//!     map: HashMap<String, String>,
+//! }
+//! ```
+//!
+//! And in your `new()` implementation for [`GenServer::new()`], you can
+//! initialize `map` with an empty hashmap using `map: HashMap::new()`. You can
+//! also use [`Option`] to wrap fields which require state initialization after
+//! your server is started, and send a message to your server to initialize that
+//! state.
+//!
 //! ## Changing channel queue size
 //!
 //! We use bounded queues, which provide backpressure when queues are full. This
