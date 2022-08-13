@@ -1,6 +1,6 @@
 [package]
 name = "genserver_codegen"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 description = "code generation for genserver crate"
 license = "MIT"
