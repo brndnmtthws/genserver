@@ -27,7 +27,7 @@
 //!
 //! Underneath the hood, Tokio is leveraged for its sweet concurrency
 //! primitives. You can generate as many servers as you'd like, and each is
-//! spawned into its own context.
+//! spawned into its own async context (like a thread, but not exactly).
 //!
 //! We can build some really cool stuff using this very simple abstraction. And
 //! since it all runs within an async context, we can build super fast web scale
@@ -148,7 +148,13 @@
 //! though it has some drawbacks such as needing to make most fields optional.
 //! 2. You could add fields to your [`Registry`]. This is the least preferred
 //! option, as the registry should be immutable and easy to make many copies of.
-
+//!
+//! ## Changing channel queue size
+//!
+//! We use bounded queues, which provide backpressure when queues are full. This
+//! is probably not something you'll need to worry much about, but if (for some
+//! reason) you want to change the channel queue length, it can be done so by
+//! implementing the [`GenServer::channel_queue_size()`] method for your server.
 #![feature(generic_associated_types)]
 
 use std::future::Future;
@@ -430,6 +436,12 @@ pub trait GenServer {
     fn handle_call(&mut self, message: Self::Message) -> Self::CallResponse<'_>;
     /// This function will be called whenever this server receives a cast.
     fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_>;
+
+    /// Reimplement this method to change the channel queue size for your
+    /// server. Defaults to 1000 messages.
+    fn channel_queue_size() -> usize {
+        1_000
+    }
 }
 
 /// Marker trait for registries created with [`make_registry`].

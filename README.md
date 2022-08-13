@@ -8,15 +8,29 @@ great things.
 
 Check out [the docs](https://docs.rs/genserver) for more details.
 
+This library is a great choice if you need an small async actor framework that
+doesn't get up in your face and has the features you need without all the cruft
+you don't. This crate has the added advantage of being insanely fast, and comes
+with all of Rust's safety features.
+
+This code is 100% pure-Rust, with no unsafe code anywhere. It has minimal
+dependencies to keep your compile times short.
+
+Every server you make and launch with the `GenServer` trait will spawn its own
+loop to handle incoming messages. You can make as many servers as you'd like,
+and they can all talk to each other by keeping a copy of the registry generated
+with `#[make_registry{}]`. The registry can be cloned into different threads,
+and it's safe to send messages from anywhere within the same runtime.
+
 ## Synopsis
 
-First run:
+First, add the crate as a dependency:
 
 ```console
 $ cargo add genserver
 ```
 
-Then try this code here in your crate (note the 2 features which need to be
+Then, try this code here in your crate (note the 2 features which need to be
 enabled in `main.rs` or `lib.rs` for applications and libraries respectively):
 
 ```rust
@@ -75,7 +89,9 @@ impl GenServer for MyServer {
 }]
 struct MyRegistry;
 
-tokio_test::block_on(async {
+// When the registry goes out of scope, everything will shut down. You have to
+// keep the registry in scope as long as you want it to continue running.
+tokio::spawn(async {
     let registry = MyRegistry::start().await;
 
     let response = registry
@@ -86,5 +102,8 @@ tokio_test::block_on(async {
         .cast_myserver("casting to myserver".into())
         .await
         .unwrap();
+    
+    // Give some time for the messages to be delivered.
+    tokio::time::sleep(Duration::from_secs(1)).await;
 });
 ```

@@ -98,7 +98,7 @@ pub fn make_registry(
         .iter()
         .map(|(_name, ty, tx, rx)| {
             quote! {
-                let (#tx, mut #rx) = tokio::sync::mpsc::channel::<(<#ty as genserver::GenServer>::Message, Option<tokio::sync::oneshot::Sender<<#ty as genserver::GenServer>::Response>>)>(1_000);
+                let (#tx, mut #rx) = tokio::sync::mpsc::channel::<(<#ty as genserver::GenServer>::Message, Option<tokio::sync::oneshot::Sender<<#ty as genserver::GenServer>::Response>>)>(#ty::channel_queue_size());
             }
         })
         .collect();
