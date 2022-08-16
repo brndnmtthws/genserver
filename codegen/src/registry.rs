@@ -197,6 +197,7 @@ pub fn make_registry(
             pub async fn start(
                 #(#existing_fields),*
             ) -> Self {
+                use genserver::GenServer;
                 #(#make_channels)*
                 let mut registry = Self {
                     joinset: genserver::joinset::JoinSet::new(),
