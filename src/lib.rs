@@ -180,6 +180,8 @@
 //! implementing the [`GenServer::channel_queue_size()`] method for your server.
 #![feature(generic_associated_types)]
 
+pub mod joinset;
+
 use std::future::Future;
 
 /// Makes a registry.
@@ -467,5 +469,8 @@ pub trait GenServer {
     }
 }
 
-/// Marker trait for registries created with [`make_registry`].
-pub trait Registry {}
+/// Trait for registries created with [`make_registry`].
+pub trait Registry {
+    /// Shuts down a registry.
+    fn shutdown(&mut self);
+}

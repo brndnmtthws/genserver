@@ -160,7 +160,7 @@ pub fn make_registry(
             quote! {
                 {
                     let local_registry = registry.clone();
-                    tokio::spawn(async move {
+                    registry.joinset.add(tokio::spawn(async move {
                         use genserver::GenServer;
                         let mut handler = <#ty as genserver::GenServer>::new(local_registry);
                         while let Some((message, oneshot)) = #rx.recv().await {
@@ -171,12 +171,13 @@ pub fn make_registry(
                                 handler.handle_cast(message).await;
                             }
                         }
-                    });
+                    }));
                 }
             }
         })
         .collect();
 
+    input.add_fields(vec![quote! { joinset: genserver::joinset::JoinSet }]);
     input.add_fields(tx_channels);
 
     let ident = input.item.ident.clone();
@@ -184,7 +185,11 @@ pub fn make_registry(
 
     let (impl_generics, ty_generics, where_clause) = input.item.generics.split_for_impl();
     let impl_trait_block = quote! {
-        impl #impl_generics genserver::Registry for #ident #ty_generics #where_clause {}
+        impl #impl_generics genserver::Registry for #ident #ty_generics #where_clause {
+            fn shutdown(&mut self) {
+                self.joinset.shutdown();
+            }
+        }
     };
 
     let impl_block = quote! {
@@ -194,6 +199,7 @@ pub fn make_registry(
             ) -> Self {
                 #(#make_channels)*
                 let mut registry = Self {
+                    joinset: genserver::joinset::JoinSet::new(),
                     #(#existing_fields_assignment,)*
                     #(#assign_tx_channels,)*
                 };
