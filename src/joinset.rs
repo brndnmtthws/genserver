@@ -37,3 +37,9 @@ impl Drop for JoinSet {
         }
     }
 }
+
+impl Default for JoinSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
