@@ -178,6 +178,20 @@
 //! is probably not something you'll need to worry much about, but if (for some
 //! reason) you want to change the channel queue length, it can be done so by
 //! implementing the [`GenServer::channel_queue_size()`] method for your server.
+//!
+//! ## Scaling to lots of things
+//!
+//! Each [`GenServer`] is spawned with `tokio::task::spawn()` into its own
+//! main loop, but within each loop all tasks are executed within a local
+//! thread. Thus, each individual server instance is thread-bound. In order to
+//! increase parallelism, you need to split up your service into more
+//! `GenServer` instances.
+//!
+//! Creating new servers is relatively cheap, and making calls between them is
+//! also cheap. The more separate servers you introduce, the higher a level of
+//! parallelism you can achieve. For a processing pipeline that needs to be
+//! highly parallelized, simply create a new server for each step or stage of
+//! your pipeline and have each stage hand off to the next.
 #![feature(generic_associated_types)]
 
 pub mod joinset;
