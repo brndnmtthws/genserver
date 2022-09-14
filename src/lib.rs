@@ -4,7 +4,7 @@
 //! inspired by Elixir's GenServer, powered by Tokio.
 //!
 //! This crate is currently nightly-only, and requires unstable features
-//! (`#![feature(type_alias_impl_trait, generic_associated_types)]`).
+//! (`#![feature(type_alias_impl_trait)]`).
 //!
 //! ## Introduction
 //!
@@ -46,8 +46,7 @@
 //!   implement the [`GenServer`] trait.
 //! * Define a registry with [`make_registry`], which starts and managers the
 //!   servers you define
-//! * Enable the `generic_associated_types` and `type_alias_impl_trait` features
-//!   at the crate level.
+//! * Enable the `type_alias_impl_trait` features at the crate level.
 //!
 //! When we make a _call_, the call will block until it returns a result from
 //! the server. When we make a _cast_, the cast returns immediately after it's
@@ -59,8 +58,8 @@
 //! implements [`GenServer`]. We then create a registry and start it.
 //!
 //! ```
-//! // these two features must be enabled at the crate level
-//! #![feature(generic_associated_types, type_alias_impl_trait)]
+//! // this feature must be enabled at the crate level
+//! #![feature(type_alias_impl_trait)]
 //!
 //! use std::future::Future;
 //!
@@ -192,8 +191,6 @@
 //! parallelism you can achieve. For a processing pipeline that needs to be
 //! highly parallelized, simply create a new server for each step or stage of
 //! your pipeline and have each stage hand off to the next.
-#![feature(generic_associated_types)]
-
 pub mod joinset;
 
 use std::future::Future;
