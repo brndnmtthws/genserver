@@ -88,8 +88,8 @@ pub fn make_registry(
         .pairs
         .iter()
         .map(|(name, ty)| {
-            let tx = Ident::new(&format!("{}_tx", name), Span::call_site());
-            let rx = Ident::new(&format!("{}_rx", name), Span::call_site());
+            let tx = Ident::new(&format!("{name}_tx"), Span::call_site());
+            let rx = Ident::new(&format!("{name}_rx"), Span::call_site());
             (name, ty, tx, rx)
         })
         .collect();
@@ -124,9 +124,9 @@ pub fn make_registry(
     let handlers: Vec<_> = channel_idents
         .iter()
         .map(|(name, ty, tx, _rx)| {
-            let call_fn = Ident::new(&format!("call_{}", name), Span::call_site());
-            let call_timeout_fn = Ident::new(&format!("call_{}_with_timeout", name), Span::call_site());
-            let cast_fn = Ident::new(&format!("cast_{}", name), Span::call_site());
+            let call_fn = Ident::new(&format!("call_{name}"), Span::call_site());
+            let call_timeout_fn = Ident::new(&format!("call_{name}_with_timeout"), Span::call_site());
+            let cast_fn = Ident::new(&format!("cast_{name}"), Span::call_site());
             quote! {
                 pub async fn #call_fn(&self, message: <#ty as genserver::GenServer>::Message) -> Result<<#ty as genserver::GenServer>::Response, genserver::Error<<#ty as genserver::GenServer>::Message, <#ty as genserver::GenServer>::Response>> {
                     let (oneshot_tx, oneshot_rx) = tokio::sync::oneshot::channel::<<#ty as genserver::GenServer>::Response>();

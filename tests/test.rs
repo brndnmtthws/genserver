@@ -159,7 +159,7 @@ async fn test_timeout() {
                     .call_myserver2("calling myserver2 from myserver1".into())
                     .await
                     .unwrap();
-                println!("got {:?} from myserver2", resp);
+                println!("got {resp:?} from myserver2");
             }
         }
     }
@@ -225,7 +225,7 @@ async fn test_state_injection() {
         }
 
         fn handle_call(&mut self, message: Self::Message) -> Self::CallResponse<'_> {
-            println!("got {:?}", message);
+            println!("got {message:?}");
             self.registry.counter.fetch_add(1, Ordering::SeqCst);
             async {
                 match message {
