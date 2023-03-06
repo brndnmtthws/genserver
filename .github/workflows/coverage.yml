@@ -6,22 +6,22 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: coverage
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: brndnmtthws/rust-action@v1
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
-      - uses: Swatinem/rust-cache@v2
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
+      - run: cargo tarpaulin --out Xml
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v3
         with:
