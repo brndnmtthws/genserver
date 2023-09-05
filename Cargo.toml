@@ -16,7 +16,7 @@ rust-version = "1.65"
 
 [dependencies]
 tokio = { version = "1", features = ["sync", "rt", "macros"] }
-genserver_codegen = { version = "0.1.15", path = "codegen" }
+genserver_codegen = { version = "0.2.2", path = "codegen" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
