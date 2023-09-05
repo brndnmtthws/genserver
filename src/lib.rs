@@ -417,7 +417,6 @@ use std::future::Future;
 ///     // ...
 /// }
 /// ```
-
 pub use genserver_codegen::make_registry;
 
 /// Error wrapper type.
