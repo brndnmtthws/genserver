@@ -27,15 +27,15 @@ and it's safe to send messages from anywhere within the same runtime.
 First, add the crate as a dependency:
 
 ```console
-$ cargo add genserver
+cargo add genserver
 ```
 
-Then, try this code here in your crate (note the 2 features which need to be
+Then, try this code here in your crate (note the 2 features that need to be
 enabled in `main.rs` or `lib.rs` for applications and libraries respectively):
 
 ```rust
 // these two features must be enabled at the crate level
-#![feature(generic_associated_types, type_alias_impl_trait)]
+#![feature(type_alias_impl_trait, impl_trait_in_assoc_type)]
 
 use std::future::Future;
 

@@ -1,10 +1,11 @@
+#![feature(impl_trait_in_assoc_type)]
 //! # genserver: generate a server
 //!
 //! This is a neat little create for building async actor-based applications,
 //! inspired by Elixir's GenServer, powered by Tokio.
 //!
 //! This crate is currently nightly-only, and requires unstable features
-//! (`#![feature(type_alias_impl_trait)]`).
+//! (`#![feature(type_alias_impl_trait, impl_trait_in_assoc_type)]`).
 //!
 //! ## Introduction
 //!
@@ -59,7 +60,7 @@
 //!
 //! ```
 //! // this feature must be enabled at the crate level
-//! #![feature(type_alias_impl_trait)]
+//! #![feature(type_alias_impl_trait, impl_trait_in_assoc_type)]
 //!
 //! use std::future::Future;
 //!
@@ -416,6 +417,7 @@ use std::future::Future;
 ///     // ...
 /// }
 /// ```
+
 pub use genserver_codegen::make_registry;
 
 /// Error wrapper type.
