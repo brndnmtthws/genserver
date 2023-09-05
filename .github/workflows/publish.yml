@@ -19,7 +19,7 @@ jobs:
           toolchain: nightly
       - run: cargo build
       - run: cargo test
-      - run: cargo login -- ${{ secrets.CRATES_IO_TOKEN }}
+      - run: cargo login ${{ secrets.CRATES_IO_TOKEN }}
       - run: cargo publish && sleep 20
         working-directory: codegen
       - run: cargo publish
