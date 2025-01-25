@@ -1,11 +1,11 @@
-#![feature(type_alias_impl_trait, impl_trait_in_assoc_type)]
+#![feature(type_alias_impl_trait, impl_trait_in_assoc_type, assert_matches)]
 
 use std::future::Future;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use genserver::{make_registry, GenServer};
+use genserver::{GenServer, make_registry};
 
 #[tokio::test]
 async fn test() {
@@ -33,7 +33,7 @@ async fn test() {
         fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_> {
             self.registry.counter.fetch_add(1, Ordering::SeqCst);
             async move {
-                println!("in handle_cast, receved {}", message);
+                println!("in handle_cast, received {}", message);
                 let resp = self
                     .registry
                     .call_myserver2("calling myserver2 from myserver1".into())
@@ -92,13 +92,11 @@ async fn test_separate_types() {
         fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_> {
             self.registry.counter.fetch_add(1, Ordering::SeqCst);
             async move {
-                println!("in handle_cast, receved {}", message);
-                let resp = self
-                    .registry
+                println!("in handle_cast, received {}", message);
+                self.registry
                     .call_myserver2("calling myserver2 from myserver1".into())
                     .await
                     .unwrap();
-                println!("got {:?} from myserver2", resp);
             }
         }
     }
@@ -114,8 +112,7 @@ async fn test_separate_types() {
     let counter = Arc::new(AtomicUsize::new(0));
     let registry = MyRegistry::start(counter.clone()).await;
 
-    let response = registry.call_myserver1("hi".into()).await.unwrap();
-    assert_eq!((), response);
+    registry.call_myserver1("hi".into()).await.unwrap();
     registry.cast_myserver1("woohoo!".into()).await.unwrap();
 
     tokio::time::sleep(Duration::from_secs(1)).await;
@@ -146,20 +143,17 @@ async fn test_timeout() {
             self.registry.counter.fetch_add(1, Ordering::SeqCst);
             async {
                 tokio::time::sleep(Duration::from_millis(25)).await;
-                ()
             }
         }
 
         fn handle_cast(&mut self, message: Self::Message) -> Self::CastResponse<'_> {
             self.registry.counter.fetch_add(1, Ordering::SeqCst);
             async move {
-                println!("in handle_cast, receved {}", message);
-                let resp = self
-                    .registry
+                println!("in handle_cast, received {}", message);
+                self.registry
                     .call_myserver2("calling myserver2 from myserver1".into())
                     .await
                     .unwrap();
-                println!("got {resp:?} from myserver2");
             }
         }
     }
