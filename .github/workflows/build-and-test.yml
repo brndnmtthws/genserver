@@ -30,8 +30,10 @@ jobs:
         uses: brndnmtthws/rust-action@v1
         with:
           toolchain: ${{ matrix.rust }}
+          cargo-packages: |
+            cargo-nextest
       - run: cargo build
-      - run: cargo test
+      - run: cargo nextest
         env:
           RUST_BACKTRACE: 1
       - run: cargo fmt --all -- --check
