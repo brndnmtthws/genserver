@@ -33,7 +33,7 @@ jobs:
           cargo-packages: |
             cargo-nextest
       - run: cargo build
-      - run: cargo nextest
+      - run: cargo nextest run
         env:
           RUST_BACKTRACE: 1
       - run: cargo fmt --all -- --check
