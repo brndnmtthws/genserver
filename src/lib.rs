@@ -64,7 +64,7 @@
 //!
 //! use std::future::Future;
 //!
-//! use genserver::{make_registry, GenServer};
+//! use genserver::{GenServer, make_registry};
 //!
 //! struct MyServer {
 //!     // Any state your server needs can go right
@@ -144,10 +144,12 @@
 //! parameters to `new()`. Instead, you have 2 options:
 //!
 //! 1. You can simply create a message with initial parameters, and send that
-//! message to your server immediately after launching. This is the best option,
-//! though it has some drawbacks such as needing to make most fields optional.
+//!    message to your server immediately after launching. This is the best
+//!    option, though it has some drawbacks such as needing to make most fields
+//!    optional.
 //! 2. You could add fields to your [`Registry`]. This is the least preferred
-//! option, as the registry should be immutable and easy to make many copies of.
+//!    option, as the registry should be immutable and easy to make many copies
+//!    of.
 //!
 //! ## Handling state within servers
 //!
@@ -400,8 +402,8 @@ use std::future::Future;
 /// takes all those fields by value for initialization. For example, this code:
 ///
 /// ```
-/// use std::sync::atomic::{AtomicUsize, Ordering};
 /// use std::sync::Arc;
+/// use std::sync::atomic::{AtomicUsize, Ordering};
 ///
 /// use genserver::make_registry;
 ///
